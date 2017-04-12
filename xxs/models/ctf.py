@@ -15,6 +15,7 @@ class Group(IdentifiedObject):
     __tablename__ = 'Group_'
 
     name = Column(String(128), nullable=False)
+    logo_url = Column(String(255), nullable=False)
 
 
 class Task(IdentifiedObject):
@@ -49,6 +50,7 @@ class CampDesc(IdentifiedObject):
 
     service_port = Column(Integer())
     service_type = Column(String(32), nullable=False)
+    service_score = Column(Integer(), nullable=False)
 
 
 class TeamCamp(IdentifiedObject):
@@ -76,6 +78,24 @@ class TeamCampRound(IdentifiedObject):
     begin_time = Column(DateTime())
     end_time = Column(DateTime())
 
+    def calc_score(self):
+        log_count = len(self.logs)
+        if log_count:
+            success_count = len(filter(lambda l: l.state == TeamServiceState.Running, self.logs))
+            if success_count > log_count / 2:
+                service_score = self.camp.desc.service_score
+            else:
+                service_score = 0
+        else:
+            service_score = 0
+
+        attacker_names = set(map(lambda s: s.group.name, self.submits))
+        flag_score = -(len(attacker_names) * self.camp.desc.score)
+        score = flag_score + service_score
+        attacker_scores = dict()
+        for attacker_name in attacker_names:
+            attacker_scores[attacker_name] = self.camp.desc.score
+        return score, attacker_scores
 
 class FlagSubmit(IdentifiedObject):
     __tablename__ = 'FlagSubmit'

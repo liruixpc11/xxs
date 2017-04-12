@@ -17,7 +17,7 @@ with db_factory.create_session() as session:
     groups = []
     executions = []
     for i in range(group_count):
-        group = Group(name=u'第{:02d}组'.format(i + 1))
+        group = Group(name=u'第{:02d}组'.format(i + 1), logo_url='/static/{:02d}.png'.format(i+1))
         groups.append(group)
         session.add(group)
 
@@ -34,7 +34,8 @@ with db_factory.create_session() as session:
                              target_node='Node-{:02d}'.format(i + 1),
                              score=100,
                              service_port=80,
-                             service_type='wordpress')
+                             service_type='wordpress',
+                             service_score=200)
         camp_desc_list.append(camp_desc)
         session.add(camp_desc)
 

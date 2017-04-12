@@ -7,6 +7,7 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from xxs.models import *
+from dba import *
 
 urls = (
     "/pwn_data", "Pwn",
@@ -50,8 +51,16 @@ class Pwn(object):
 
         result = []
         for flag in flags:
-            result.append(u'{} attack {} on {}'.format(flag.group.name, flag.round.camp.execution.group.name,
-                                                       flag.round.camp.desc.name))
+            result.append({
+                'attacker_name': flag.group.name,
+                'attacker_logo': flag.group.logo_url,
+                'victim_name': flag.round.camp.execution.group.name,
+                'victim_logo': flag.round.camp.execution.group.logo_url,
+                'camp_name': flag.round.camp.desc.name,
+                'timestamp': flag.submit_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'round_index': flag.round.index
+            })
+
         return json.dumps(result)
 
 
@@ -65,8 +74,7 @@ class FlagList(object):
         camp_names = [camp.name for camp in web.ctx.orm.query(CampDesc).order_by(CampDesc.name.asc()).all()]
         group_names = [execution.group.name for execution in web.ctx.orm.query(Execution).join(Group).filter(Execution.task_id==task_id).order_by(Group.name.asc()).all()]
 
-        round_index = web.ctx.orm.query(func.max(TeamCampRound.index)).scalar()
-        round_camps = web.ctx.orm.query(TeamCampRound).filter(TeamCampRound.index == round_index).all()
+        round_index, round_camps = query_current_rounds(web.ctx.orm, task_id)
         data = []
         for round_camp in round_camps:
             if len(round_camp.submits) > 0:
@@ -85,10 +93,16 @@ class FlagList(object):
                 "status": state
             })
 
+        round_scores = calc_scores_for_rounds(round_camps)
+        total_scores = calc_scores(web.ctx.orm, task_id)
+
         result = {
             'camps': camp_names,
             'groups': group_names,
-            'data': data
+            'data': data,
+            'round_scores': round_scores,
+            'total_scores': total_scores,
+            'round_index': round_index
         }
         return json.dumps(result)
 

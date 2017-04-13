@@ -95,6 +95,7 @@ class FlagList(object):
 
         round_scores = calc_scores_for_rounds(round_camps)
         total_scores = calc_scores(web.ctx.orm, task_id)
+        last_submits = query_last_submits(web.ctx.orm, task_id)
 
         result = {
             'camps': camp_names,
@@ -102,8 +103,10 @@ class FlagList(object):
             'data': data,
             'round_scores': round_scores,
             'total_scores': total_scores,
-            'round_index': round_index
+            'round_index': round_index,
+            'last_submits': last_submits
         }
+
         return json.dumps(result)
 
 

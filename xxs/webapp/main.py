@@ -104,7 +104,9 @@ class FlagList(object):
             'round_scores': round_scores,
             'total_scores': total_scores,
             'round_index': round_index,
-            'last_submits': last_submits
+            'last_submits': last_submits,
+            'lastsubmit': map(lambda s: group_names.index(s) + 1, last_submits),
+            'points': total_scores
         }
 
         return json.dumps(result)

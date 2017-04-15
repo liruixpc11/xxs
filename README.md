@@ -9,3 +9,10 @@
 3. 运行[main.py](xxs/webapp/main.py)，运行测试用Web服务器；
 4. 访问[http://localhost:8080/pwn_data?task_id=1&last_id=0](http://localhost:8080/pwn_data?task_id=1&last_id=0)，获取pwn墙数据；
 5. 访问[http://localhost:8080/flag_data?task_id=1](http://localhost:8080/flag_data?task_id=1)，获取Flag数据。
+
+### 更新
+
+服务端更新后，需要先删除数据库，再运行[init_test_db.py](xxs/tools/init_test_db.py)重建。
+```bash
+rm /var/lib/cadts/xxs/xxs.db
+```

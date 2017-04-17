@@ -72,25 +72,37 @@ class FlagList(object):
         task_id = input_data.task_id
 
         camp_names = [camp.name for camp in web.ctx.orm.query(CampDesc).order_by(CampDesc.name.asc()).all()]
-        group_names = [execution.group.name for execution in web.ctx.orm.query(Execution).join(Group).filter(Execution.task_id==task_id).order_by(Group.name.asc()).all()]
+        group_names = [execution.group.name for execution in
+                       web.ctx.orm.query(Execution).join(Group).filter(Execution.task_id == task_id).order_by(
+                           Group.name.asc()).all()]
 
         round_index, round_camps = query_current_rounds(web.ctx.orm, task_id)
         data = []
         for round_camp in round_camps:
-            if len(round_camp.submits) > 0:
-                state = 'Attacked'
+            last_log = web.ctx.orm.query(TeamServiceCheckLog).join(TeamCampRound).filter(
+                TeamCampRound.camp_id == round_camp.camp_id).order_by(TeamServiceCheckLog.trigger_time.desc()).first()
+            if last_log:
+                service_state = last_log.state
             else:
-                last_log = web.ctx.orm.query(TeamServiceCheckLog).join(TeamCampRound).filter(
-                    TeamCampRound.camp_id == round_camp.camp_id).order_by(TeamServiceCheckLog.trigger_time.desc()).first()
-                if last_log:
-                    state = last_log.state
+                service_state = TeamServiceState.Unknown
+
+            attacked = len(round_camp.submits) > 0
+            if attacked:
+                attack_state = 'Attacked'
+                if service_state == TeamServiceState.Blocked:
+                    state = 'Attacked&Blocked'
                 else:
-                    state = TeamServiceState.Unknown
+                    state = 'Attacked'
+            else:
+                attack_state = 'Normal'
+                state = service_state
 
             data.append({
                 "group_name": round_camp.camp.execution.group.name,
                 "camp_name": round_camp.camp.desc.name,
-                "status": state
+                "status": state,
+                "attack_status": attack_state,
+                "service_status": service_state
             })
 
         round_scores = calc_scores_for_rounds(round_camps)

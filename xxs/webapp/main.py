@@ -114,8 +114,9 @@ class FlagList(object):
 
         result = {
             'camps': camp_names,
-            'groups': groups,
-            'group_names': group_names,
+            'groups': group_names,
+            'group_details': groups,
+            'group_logos': [group['logo'] for group in groups],
             'data': data,
             'round_scores': round_scores,
             'total_scores': total_scores,

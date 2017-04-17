@@ -38,6 +38,7 @@ app.add_processor(load_sqla)
 class Pwn(object):
     def GET(self):
         web.header('Content-Type', 'application/json')
+        web.header('Access-Control-Allow-Origin', '*')
 
         input_data = web.input()
         last_id = int(input_data.last_id)
@@ -67,14 +68,16 @@ class Pwn(object):
 class FlagList(object):
     def GET(self):
         web.header('Content-Type', 'application/json')
+        web.header('Access-Control-Allow-Origin', '*')
 
         input_data = web.input()
         task_id = input_data.task_id
 
         camp_names = [camp.name for camp in web.ctx.orm.query(CampDesc).order_by(CampDesc.name.asc()).all()]
-        group_names = [execution.group.name for execution in
+        groups = [{"name": execution.group.name, "logo": execution.group.logo_url} for execution in
                        web.ctx.orm.query(Execution).join(Group).filter(Execution.task_id == task_id).order_by(
                            Group.name.asc()).all()]
+        group_names = [group['name'] for group in groups]
 
         round_index, round_camps = query_current_rounds(web.ctx.orm, task_id)
         data = []
@@ -111,7 +114,8 @@ class FlagList(object):
 
         result = {
             'camps': camp_names,
-            'groups': group_names,
+            'groups': groups,
+            'group_names': group_names,
             'data': data,
             'round_scores': round_scores,
             'total_scores': total_scores,
